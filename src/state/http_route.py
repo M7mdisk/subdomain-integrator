@@ -4,6 +4,7 @@
 """subdomain-integrator ingress charm state component."""
 
 import dataclasses
+import hashlib
 import re
 
 import ops
@@ -25,7 +26,11 @@ def _dns_safe_name(value: str) -> str:
 
 def _k8s_safe_name(*parts: str, limit: int = 63) -> str:
     name = "-".join(_dns_safe_name(part) for part in parts if part)
-    return name[:limit].rstrip("-")
+    if len(name) <= limit:
+        return name
+    digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
+    trimmed = name[: limit - 9].rstrip("-")
+    return f"{trimmed}-{digest}"
 
 
 @dataclasses.dataclass(frozen=True)
