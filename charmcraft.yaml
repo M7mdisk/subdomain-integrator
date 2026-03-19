@@ -25,11 +25,6 @@ description: |
   A Juju charm that exposes multiple related applications under
   <app-name>.<base-domain> through a shared Gateway API entrypoint.
 summary: Shared Gateway API ingress with automatic subdomain routing.
-links:
-  issues: https://github.com/canonical/gateway-api-integrator-operator/issues
-  source: https://github.com/canonical/gateway-api-integrator-operator
-  contact:
-    - https://launchpad.net/~canonical-is-devops
 assumes:
   - k8s-api
   - juju >= 3.3
