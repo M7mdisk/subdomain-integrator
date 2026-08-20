@@ -107,6 +107,7 @@ class SubdomainIntegratorCharm(CharmBase):
         self.framework.observe(self.on[HAPROXY_ROUTE_RELATION].relation_broken, self._on_data_provided)
         self.framework.observe(self.on.dns_record_relation_created, self._on_dns_record_relation_created)
         self.framework.observe(self.on.dns_record_relation_joined, self._on_dns_record_relation_joined)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _get_certificate_requests(self) -> list[CertificateRequestAttributes]:
         base_domain = typing.cast(str | None, self.config.get("base-domain"))
@@ -172,6 +173,10 @@ class SubdomainIntegratorCharm(CharmBase):
 
     @validate_config_and_integration(defer=False)
     def _on_dns_record_relation_joined(self, _: RelationJoinedEvent) -> None:
+        self._reconcile()
+
+    @validate_config_and_integration(defer=False)
+    def _on_update_status(self, _: typing.Any) -> None:
         self._reconcile()
 
     def _reconcile(self) -> None:
