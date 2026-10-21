@@ -112,7 +112,13 @@ class SubdomainIntegratorCharm(CharmBase):
     def _get_certificate_requests(self) -> list[CertificateRequestAttributes]:
         base_domain = typing.cast(str | None, self.config.get("base-domain"))
         if base_domain:
-            return [CertificateRequestAttributes(common_name=base_domain)]
+            wildcard_hostname = f"*.{base_domain}"
+            return [
+                CertificateRequestAttributes(
+                    common_name=wildcard_hostname,
+                    sans_dns=frozenset({wildcard_hostname}),
+                )
+            ]
         return []
 
     @property
@@ -237,7 +243,7 @@ class SubdomainIntegratorCharm(CharmBase):
 
         entry = RequirerEntry(
             domain=base_domain,
-            host_label="@",
+            host_label="*",
             ttl=600,
             record_class=RecordClass.IN,
             record_type=RecordType.A,
@@ -353,24 +359,14 @@ class SubdomainIntegratorCharm(CharmBase):
         if not hosts:
             return
 
-        relation_hostnames = []
-        for relation in self._ingress_provider.relations:
-            try:
-                relation_hostnames.append(self._relation_hostname(relation, config.base_domain))
-            except IngressIntegrationDataValidationError:
-                logger.exception("Invalid ingress relation data for relation id %s", relation.id)
-
-        primary_hostname = relation_hostnames[0] if relation_hostnames else f"*.{config.base_domain}"
-        additional_hostnames = relation_hostnames[1:] if len(relation_hostnames) > 1 else []
-
         # HAProxy forwards wildcard subdomains to Gateway API, which performs per-app hostname routing.
         self._haproxy_route.provide_haproxy_route_requirements(
             service=self.app.name,
             ports=[80],
             protocol="http",
             hosts=hosts,
-            hostname=primary_hostname,
-            additional_hostnames=additional_hostnames,
+            hostname=f"*.{config.base_domain}",
+            additional_hostnames=[],
             paths=["/"],
             allow_http=False,
         )

@@ -54,7 +54,7 @@ config:
       default: false
       description: |
         Whether to enforce HTTPS by redirecting HTTP traffic to HTTPS.
-        Note: per-subdomain TLS certificate automation is not yet implemented.
+        Requires a certificates relation providing a wildcard certificate for the base domain.
       type: boolean
 
 actions:
